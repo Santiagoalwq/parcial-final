@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoviSimple - La Odisea de los Seis Puntos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            padding: 40px;
+            width: 90%;
+            max-width: 900px;
+        }
+        
+        .screen {
+            display: none;
+        }
+        
+        .screen.active {
+            display: block;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        
+        h2 {
+            text-align: center;
+            color: #555;
+            margin-bottom: 25px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+        
+        input[type="text"], input[type="email"], input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .link-button {
+            background: none;
+            color: #667eea;
+            text-decoration: underline;
+            font-size: 14px;
+        }
+        
+        .map-container {
+            position: relative;
+            width: 700px;
+            height: 500px;
+            margin: 20px auto;
+            background: #f8f9fa;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+        }
+        
+        .node {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #6c757d;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 4px solid transparent;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .node:hover {
+            transform: scale(1.1);
+        }
+        
+        .node.origin {
+            background: #007bff;
+            border-color: #004085;
+            box-shadow: 0 0 20px rgba(0,123,255,0.5);
+        }
+        
+        .node.destination {
+            background: #dc3545;
+            border-color: #721c24;
+            box-shadow: 0 0 20px rgba(220,53,69,0.5);
+        }
+        
+        .edge {
+            position: absolute;
+            background: #6c757d;
+            height: 4px;
+            transform-origin: left center;
+            border-radius: 2px;
+        }
+        
+        .edge.active {
+            background: #28a745;
+            height: 6px;
+            z-index: 10;
+            box-shadow: 0 0 10px rgba(40,167,69,0.5);
+        }
+        
+        .progress-container {
+            margin: 30px 0;
+            display: none;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 25px;
+            background: #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 15px;
+        }
+        
+        .route-info {
+            text-align: center;
+            margin: 30px 0;
+            display: none;
+        }
+        
+        .route-info h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .cost-info {
+            background: linear-gradient(135deg, #e7f3ff, #f0f8ff);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border: 2px solid #007bff;
+        }
+        
+        .cost-info p {
+            margin: 8px 0;
+            font-size: 16px;
+        }
+        
+        .selection-info {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .error {
+            color: #dc3545;
+            text-align: center;
+            margin: 15px 0;
+            display: none;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .success {
+            color: #155724;
+            text-align: center;
+            margin: 15px 0;
+            display: none;
+            background: #d4edda;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .button-group button {
+            width: auto;
+            min-width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Pantalla de Registro -->
+        <div id="register-screen" class="screen active">
+            <h1>MoviSimple</h1>
+            <h2>Registro de Usuario</h2>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="reg-name">Name:</label>
+                    <input type="text" id="reg-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-email">Email:</label>
+                    <input type="email" id="reg-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-password">Password:</label>
+                    <input type="password" id="reg-password" required>
+                </div>
+                <button type="submit">Register</button>
+                <button type="button" class="link-button" onclick="showLogin()">¿Ya tienes cuenta? Log in</button>
+            </form>
+            <div id="register-error" class="error"></div>
+            <div id="register-success" class="success"></div>
+        </div>
+
+        <!-- Pantalla de Login -->
+        <div id="login-screen" class="screen">
+            <h1>MoviSimple</h1>
+            <h2>Iniciar Sesión</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-email">Email:</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password:</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button type="submit">Log in</button>
+                <button type="button" class="link-button" onclick="showRegister()">¿No tienes cuenta? Register</button>
+            </form>
+            <div id="login-error" class="error"></div>
+        </div>
+
+        <!-- Interfaz de Solicitud de Viaje -->
+        <div id="map-screen" class="screen">
+            <h1>MoviSimple - Solicitud de Viaje</h1>
+            <div class="selection-info">
+                <p><strong>Instrucciones:</strong> Haz clic en un nodo para seleccionar origen (azul) y luego destino (rojo)</p>
+                <p id="selection-status">Selecciona el nodo de origen</p>
+            </div>
+            
+            <div class="map-container" id="map-container">
+                <!-- Los nodos y aristas se generarán dinámicamente -->
+            </div>
+            
+            <div class="button-group">
+                <button id="calculate-btn" onclick="calculateRoute()" disabled>Calculate Route</button>
+                <button onclick="resetSelection()">Reiniciar Selección</button>
+                <button onclick="logout()">Cerrar Sesión</button>
+            </div>
+            
+            <div class="progress-container" id="progress-container">
+                <h3>🚗 Viaje en Progreso...</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <p id="progress-text">Iniciando viaje...</p>
+            </div>
+            
+            <div class="route-info" id="route-info">
+                <h3>📊 Información del Viaje</h3>
+                <div class="cost-info">
+                    <p><strong>🗺️ Ruta:</strong> <span id="route-path"></span></p>
+                    <p><strong>⏱️ Tiempo total:</strong> <span id="total-time"></span> segundos</p>
+                    <p><strong>💰 Costo:</strong> $<span id="total-cost"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let users = {};
+        let currentUser = null;
+        let selectedOrigin = null;
+        let selectedDestination = null;
+        let isSelectingOrigin = true;
+        const TARIFA_POR_SEGUNDO = 0.50;
+
+        // Posiciones de los 6 nodos en el mapa
+        const nodePositions = {
+            0: {x: 80, y: 80},
+            1: {x: 550, y: 80},
+            2: {x: 315, y: 200},
+            3: {x: 80, y: 380},
+            4: {x: 550, y: 380},
+            5: {x: 315, y: 420}
+        };
+
+        // Las 9 aristas bidireccionales con pesos en segundos
+        const edges = [
+            [0, 1, 45],  // Nodo 0 a Nodo 1: 45 segundos
+            [0, 2, 30],  // Nodo 0 a Nodo 2: 30 segundos
+            [0, 3, 60],  // Nodo 0 a Nodo 3: 60 segundos
+            [1, 2, 25],  // Nodo 1 a Nodo 2: 25 segundos
+            [1, 4, 40],  // Nodo 1 a Nodo 4: 40 segundos
+            [2, 3, 35],  // Nodo 2 a Nodo 3: 35 segundos
+            [2, 4, 50],  // Nodo 2 a Nodo 4: 50 segundos
+            [2, 5, 20],  // Nodo 2 a Nodo 5: 20 segundos
+            [3, 5, 55],  // Nodo 3 a Nodo 5: 55 segundos
+        ];
+
+        // Implementación del algoritmo Dijkstra Simple
+        function dijkstraSimple(graph, source) {
+            const numNodes = 6;
+            const distances = Array(numNodes).fill(Infinity);
+            const predecessors = Array(numNodes).fill(null);
+            const visited = Array(numNodes).fill(false);
+            
+            distances[source] = 0;
+            
+            for (let i = 0; i < numNodes; i++) {
+                // Encontrar el nodo no visitado con menor distancia
+                let u = -1;
+                for (let v = 0; v < numNodes; v++) {
+                    if (!visited[v] && (u === -1 || distances[v] < distances[u])) {
+                        u = v;
+                    }
+                }
+                
+                if (distances[u] === Infinity) break;
+                visited[u] = true;
+                
+                // Actualizar distancias de vecinos
+                for (let [neighbor, weight] of graph[u] || []) {
+                    if (!visited[neighbor]) {
+                        const newDistance = distances[u] + weight;
+                        if (newDistance < distances[neighbor]) {
+                            distances[neighbor] = newDistance;
+                            predecessors[neighbor] = u;
+                        }
+                    }
+                }
+            }
+            
+            return { distances, predecessors };
+        }
+
+        // Reconstruir la ruta mínima
+        function getShortestPath(predecessors, source, destination) {
+            const path = [];
+            let current = destination;
+            
+            while (current !== null) {
+                path.unshift(current);
+                current = predecessors[current];
+            }
+            
+            return path[0] === source ? path : [];
+        }
+
+        // Inicializar la aplicación
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMap();
+            
+            // Event listeners para formularios
+            document.getElementById('register-form').addEventListener('submit', handleRegister);
+            document.getElementById('login-form').addEventListener('submit', handleLogin);
+        });
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function showRegister() {
+            showScreen('register-screen');
+            clearMessages();
+        }
+
+        function showLogin() {
+            showScreen('login-screen');
+            clearMessages();
+        }
+
+        function clearMessages() {
+            document.querySelectorAll('.error, .success').forEach(el => {
+                el.style.display = 'none';
+                el.textContent = '';
+            });
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('reg-name').value.trim();
+            const email = document.getElementById('reg-email').value.trim().toLowerCase();
+            const password = document.getElementById('reg-password').value;
+
+            if (!name || !email || !password) {
+                showError('register-error', 'Todos los campos son obligatorios');
+                return;
+            }
+
+            if (password.length < 6) {
+                showError('register-error', 'La contraseña debe tener al menos 6 caracteres');
+                return;
+            }
+
+            if (users[email]) {
+                showError('register-error', 'El email ya está registrado');
+                return;
+            }
+
+            // Guardar usuario (simulando users.txt)
+            users[email] = { name, email, password };
+            
+            showSuccess('register-success', 'Usuario registrado exitosamente');
+            setTimeout(() => showLogin(), 2000);
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim().toLowerCase();
+            const password = document.getElementById('login-password').value;
+
+            if (!email || !password) {
+                showError('login-error', 'Email y contraseña son obligatorios');
+                return;
+            }
+
+            if (users[email] && users[email].password === password) {
+                currentUser = users[email];
+                showScreen('map-screen');
+                resetSelection();
+            } else {
+                showError('login-error', 'Email o contraseña incorrectos');
+            }
+        }
+
+        function showError(id, message) {
+            const el = document.getElementById(id);
+            el.textContent = message;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 5000);
+        }
+
+        function showSuccess(id, message) {
+            const el = document.getElementById(id);
+            el.textContent = message;
+            el.style.display = 'block';
+        }
+
+        function initializeMap() {
+            const mapContainer = document.getElementById('map-container');
+            mapContainer.innerHTML = '';
+
+            // Crear los 6 nodos numerados
+            for (let i = 0; i < 6; i++) {
+                const node = document.createElement('div');
+                node.className = 'node';
+                node.id = node-${i};
+                node.textContent = i;
+                node.style.left = nodePositions[i].x + 'px';
+                node.style.top = nodePositions[i].y + 'px';
+                node.addEventListener('click', () => selectNode(i));
+                mapContainer.appendChild(node);
+            }
+
+            // Crear las 9 aristas
+            edges.forEach(([from, to]) => {
+                createEdge(from, to);
+            });
+        }
+
+        function createEdge(from, to) {
+            const edge = document.createElement('div');
+            edge.className = 'edge';
+            edge.id = edge-${from}-${to};
+            
+            const fromPos = nodePositions[from];
+            const toPos = nodePositions[to];
+            
+            const dx = toPos.x - fromPos.x;
+            const dy = toPos.y - fromPos.y;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            
+            edge.style.left = (fromPos.x + 30) + 'px';
+            edge.style.top = (fromPos.y + 30) + 'px';
+            edge.style.width = length + 'px';
+            edge.style.transform = rotate(${angle}deg);
+            
+            document.getElementById('map-container').appendChild(edge);
+        }
+
+        function selectNode(nodeId) {
+            if (isSelectingOrigin) {
+                // Limpiar selección anterior
+                document.querySelectorAll('.node').forEach(node => {
+                    node.classList.remove('origin', 'destination');
+                });
+                
+                selectedOrigin = nodeId;
+                document.getElementById(node-${nodeId}).classList.add('origin');
+                document.getElementById('selection-status').textContent = 'Ahora selecciona el nodo de destino';
+                isSelectingOrigin = false;
+            } else {
+                if (nodeId === selectedOrigin) {
+                    alert('El destino debe ser diferente al origen');
+                    return;
+                }
+                
+                selectedDestination = nodeId;
+                document.getElementById(node-${nodeId}).classList.add('destination');
+                document.getElementById('selection-status').textContent = Origen: ${selectedOrigin}, Destino: ${selectedDestination};
+                document.getElementById('calculate-btn').disabled = false;
+            }
+        }
+
+        function resetSelection() {
+            selectedOrigin = null;
+            selectedDestination = null;
+            isSelectingOrigin = true;
+            
+            document.querySelectorAll('.node').forEach(node => {
+                node.classList.remove('origin', 'destination');
+            });
+            
+            document.querySelectorAll('.edge').forEach(edge => {
+                edge.classList.remove('active');
+            });
+            
+            document.getElementById('selection-status').textContent = 'Selecciona el nodo de origen';
+            document.getElementById('calculate-btn').disabled = true;
+            document.getElementById('progress-container').style.display = 'none';
+            document.getElementById('route-info').style.display = 'none';
+        }
+
+        function calculateRoute() {
+            if (selectedOrigin === null || selectedDestination === null) {
+                alert('Selecciona origen y destino');
+                return;
+            }
+
+            // Crear grafo para Dijkstra
+            const graph = Array(6).fill().map(() => []);
+            edges.forEach(([u, v, weight]) => {
+                graph[u].push([v, weight]);
+                graph[v].push([u, weight]);
+            });
+
+            // Ejecutar dijkstraSimple(source)
+            const { distances, predecessors } = dijkstraSimple(graph, selectedOrigin);
+            const path = getShortestPath(predecessors, selectedOrigin, selectedDestination);
+            const totalTime = distances[selectedDestination];
+
+            if (path.length === 0 || totalTime === Infinity) {
+                alert('No se encontró ruta entre los nodos seleccionados');
+                return;
+            }
+
+            animateRoute(path, totalTime);
+        }
+
+        function animateRoute(path, totalTime) {
+            document.getElementById('progress-container').style.display = 'block';
+            document.getElementById('route-info').style.display = 'block';
+            
+            // Mostrar información de la ruta
+            document.getElementById('route-path').textContent = path.join(' → ');
+            document.getElementById('total-time').textContent = totalTime;
+            document.getElementById('total-cost').textContent = (totalTime * TARIFA_POR_SEGUNDO).toFixed(2);
+            
+            // Dibujar la ruta óptima sobre el mapa
+            for (let i = 0; i < path.length - 1; i++) {
+                const from = path[i];
+                const to = path[i + 1];
+                const edge1 = document.getElementById(edge-${from}-${to});
+                const edge2 = document.getElementById(edge-${to}-${from});
+                if (edge1) edge1.classList.add('active');
+                if (edge2) edge2.classList.add('active');
+            }
+            
+            // Mostrar barra de progreso que respeta el peso en segundos
+            let progress = 0;
+            const progressFill = document.getElementById('progress-fill');
+            const progressText = document.getElementById('progress-text');
+            
+            const interval = setInterval(() => {
+                progress += 2;
+                progressFill.style.width = progress + '%';
+                
+                const currentTime = Math.floor((progress / 100) * totalTime);
+                progressText.textContent = Tiempo transcurrido: ${currentTime}/${totalTime} segundos;
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    progressText.textContent = '¡Viaje completado! Reiniciando en 3 segundos...';
+                    
+                    // Al completar la animación, reiniciar origen, destino y ocultar animación
+                    setTimeout(() => {
+                        resetSelection();
+                    }, 3000);
+                }
+            }, (totalTime * 1000) / 50); // Animar durante el tiempo total real
+        }
+
+        function logout() {
+            currentUser = null;
+            showScreen('login-screen');
+            resetSelection();
+            document.getElementById('login-form').reset();
+        }
+    </script>
+</body>
+</html>
